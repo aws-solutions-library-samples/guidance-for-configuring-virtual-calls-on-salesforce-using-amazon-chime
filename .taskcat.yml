@@ -1,5 +1,5 @@
 project:
-  name: quickstart-salesforce-industries-virtual-calls
+  name: cfn-ps-salesforce-industries-virtual-calls
   owner: quickstart-eng@amazon.com
   template: templates/salesforce-industries-virtual-calls.template.yaml
   parameters:
