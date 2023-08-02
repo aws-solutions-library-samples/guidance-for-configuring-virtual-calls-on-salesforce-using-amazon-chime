@@ -1,8 +1,24 @@
 // Edit this placeholder text as necessary to describe the deployment options.
 
-This Partner Solution provides the following deployment options:
+This Partner Solution provides the following deployment option for provisioning {partner-product-short-name} resources into your new AWS account. Configure {partner-product-short-name} settings as needed.
 
-* https://qs_launch_permalink[Deploy {partner-product-short-name} into a new VPC^]. This option builds a new AWS environment that consists of the VPC, subnets, NAT gateways, security groups, bastion hosts, and other infrastructure components. It then deploys {partner-product-short-name} into this new VPC.
-* https://qs_launch_permalink[Deploy {partner-product-short-name} into an existing VPC^]. This option provisions {partner-product-short-name} in your existing AWS infrastructure.
+https://fwd.aws/P7jzX?[Deploy {partner-product-short-name} into a new AWS account^] 
 
-This Partner Solution provides separate templates for these options. It also lets you configure Classless Inter-Domain Routing (CIDR) blocks, instance types, and {partner-product-short-name} settings.
+== Upgrade an existing deployment of {partner-product-short-name}
+
+If you've already deployed {partner-product-short-name} and just need to upgrade your existing deployment, perform the following steps:
+
+. Do the following steps to download the latest template file from GitHub:
+.. Navigate to the https://fwd.aws/VVvWr?[Partner Solution landing page^].
+.. Choose *View the source code for this Partner Solution* to open the GitHub repository.
+.. Open the *template* folder to access the latest CloudFormation template. 
+.. Download the template. 
+. In the AWS Management Console, choose *Services > CloudFormation*.
+. Choose the existing Virtual Care stack. 
+. Choose *Update* to open the *Update stack* page.
+. Choose *Replace current template*, and upload the template file. Choose *Next*.
+. On the *Specify stack details* page, review the stack settings and update the control Region (for example, us-east-1) and messaging Region (for example, us-east-1). Choose *Next*.
+. On the *Configure stack options* page, review the changes and choose *Next*.
+. On the *Review* page, review and confirm template settings. Under *Capabilities*, select all of the check boxes to acknowledge that the template creates AWS Identity and Access Management (IAM) resources that might require the ability to automatically expand macros.
+. Choose *Submit*. The stack takes about 5 minutes to update.
+. Monitor the stack's status, and when the status is *UPDATE_COMPLETE*, the {partner-product-name} deployment is ready.  
