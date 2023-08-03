@@ -1,33 +1,22 @@
 project:
-  name: cfn-sample-template
-  owner: quickstart@amazon.com
-  package_lambda: false
+  name: cfn-ps-salesforce-industries-virtual-calls
+  owner: quickstart-eng@amazon.com
+  template: templates/salesforce-industries-virtual-calls.template.yaml
+  parameters:
+    SalesforceUsername: override
+    SalesforcePassword: override
+    SalesforceOAuthClientID: override
+    SalesforceOAuthClientSecret: override
+    SalesforceAuthorizationEndpoint: override
+    SalesforcePlatformEventEndpoint: override
+    SalesforcePlatformEventEndpointRateLimit: 5
+    DlqAlarmEmail: override
+    IamUserName: $[taskcat_genpass_8A]
+    IamPassword: $[taskcat_genpass_128S]
+    IamGroupName: $[taskcat_genpass_8A]
   regions:
-  - ap-northeast-1
-  - ap-northeast-2
-  - ap-southeast-1
-  - ap-southeast-2
-  - eu-central-1
-  - eu-west-1
-  - sa-east-1
-  - us-east-1
-  - us-west-1
-  - us-west-2
+    - us-east-1
 tests:
-  sample:
-    parameters:
-      Param1: 'Inputs to Stack'
-      # Examples: of other taskcat dynamic input parameters for more into see http://taskcat.io
-      #
-      #      AvailabilityZones: $[taskcat_genaz_3]
-      #      ByteValue: 1
-      #      PasswordA: $[taskcat_genpass_8A]
-      #      PasswordB: $[taskcat_genpass_32S]
-      #      RandomNumber: $[taskcat_random-numbers]
-      #      RandomString: $[taskcat_random-string]
-      #      StackName: TestStack
-      #      UUID: $[taskcat_genuuid]
-      #
+  defaults:
     regions:
-    - us-east-2
-    template: templates/another-workload.template.yaml
+      - us-east-1

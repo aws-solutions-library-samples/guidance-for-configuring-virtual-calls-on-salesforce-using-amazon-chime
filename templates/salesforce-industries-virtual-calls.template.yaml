@@ -1,0 +1,607 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation template to create resources required to send Amazon Chime events to Salesforce. (qs-1tmnastsb)
+Metadata:
+  LintSpellExclude:
+    - Salesforce
+  LICENSE: Apache License, Version 2.0
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Salesforce credentials configuration
+        Parameters:
+          - SalesforceUsername
+          - SalesforcePassword
+      - Label:
+          default: Salesforce OAuth configuration
+        Parameters:
+          - SalesforceAuthorizationEndpoint
+          - SalesforceOAuthClientID
+          - SalesforceOAuthClientSecret
+      - Label:
+          default: Salesforce platform event endpoint configuration
+        Parameters:
+          - SalesforcePlatformEventEndpoint
+          - SalesforcePlatformEventEndpointRateLimit
+      - Label:
+          default: Service account
+        Parameters:
+          - IamUserName
+          - IamGroupName
+      - Label:
+          default: Meeting and Messaging Regions configuration
+        Parameters:
+          - ControlRegion
+          - MessagingRegion
+      - Label:
+          default: Event processing retry configuration
+        Parameters:
+          - MaximumRetryAttempts
+          - MaximumEventAgeInSeconds
+      - Label:
+          default: Dead-letter queue configuration
+        Parameters:
+          - DlqName
+          - DlqCmkAlias
+          - DlqKmsDataKeyReusePeriod
+          - DlqMessageRetentionPeriod
+          - DlqQueueDepthAlarmPeriod
+          - DlqQueueDepthAlarmEvaluationPeriods
+          - DlqQueueDepthAlarmThreshold
+          - DlqAlarmEmail
+    ParameterLabels:
+      SalesforceUsername:
+        default: Username
+      SalesforcePassword:
+        default: Password
+      SalesforceOAuthClientID:
+        default: Client ID
+      SalesforceOAuthClientSecret:
+        default: Client secret
+      SalesforceAuthorizationEndpoint:
+        default: Endpoint URL
+      SalesforcePlatformEventEndpoint:
+        default: Endpoint URL
+      SalesforcePlatformEventEndpointRateLimit:
+        default: Rate limit
+      MaximumRetryAttempts:
+        default: Max retries
+      MaximumEventAgeInSeconds:
+        default: Max age
+      DlqName:
+        default: Name
+      DlqCmkAlias:
+        default: CMK alias
+      DlqKmsDataKeyReusePeriod:
+        default: Data key reuse period
+      DlqMessageRetentionPeriod:
+        default: Retention period
+      DlqAlarmEmail:
+        default: Email address
+      DlqQueueDepthAlarmPeriod:
+        default: Alarm period
+      DlqQueueDepthAlarmEvaluationPeriods:
+        default: Alarm evaluation periods
+      DlqQueueDepthAlarmThreshold:
+        default: Alarm threshold
+      IamUserName:
+        default: Username
+      IamGroupName:
+        default: Group name
+      ControlRegion:
+        default: AWS API Endpoint Region
+      MessagingRegion:
+        default: AWS Video Waiting Room and Messaging Region
+Parameters:
+  SalesforceUsername:
+    Type: String
+    Description: >-
+      Salesforce user name to be stored in AWS Secrets Manager and used
+      by Amazon EventBridge for authentication when sending events.
+    MinLength: 1
+  SalesforcePassword:
+    Type: String
+    Description: >-
+      Salesforce password to be stored in AWS Secrets Manager and used
+      by Amazon EventBridge for authentication when sending events.
+    NoEcho: True
+    MinLength: 8
+  SalesforceOAuthClientID:
+    Type: String
+    Description: >-
+      Salesforce Connected App OAuth client ID to be stored in
+      AWS Secrets Manager and used by Amazon EventBridge for authentication
+      when sending events.
+    NoEcho: True
+    MinLength: 1
+  SalesforceOAuthClientSecret:
+    Type: String
+    Description: >-
+      Salesforce Connected App OAuth client secret to be stored in
+      AWS Secrets Manager and used by Amazon EventBridge for authentication
+      when sending events.
+    NoEcho: True
+    MinLength: 1
+  SalesforceAuthorizationEndpoint:
+    Type: String
+    Description: >-
+      Salesforce OAuth authorization endpoint URL. Example:
+      'https://<InstanceName>.my.salesforce.com/services/oauth2/token'.
+    MinLength: 31
+    AllowedPattern: ^https:\/\/[a-z]([a-z0-9-\.]*[a-z])*/services/oauth2/token$
+    ConstraintDescription: >-
+      Must be a valid Salesforce authorization endpoint URL.
+  SalesforcePlatformEventEndpoint:
+    Type: String
+    Description: >-
+      Salesforce platform event endpoint URL. Example:
+      'https://<InstanceName>.my.salesforce.com/services/data/v55.0/sobjects/ServiceProviderEvent'.
+    MinLength: 58
+    AllowedPattern: ^https:\/\/[a-z]([a-z0-9-\.]*[a-z])*/services/data/v\d+\.\d/sobjects/ServiceProviderEvent(__e)?$
+    ConstraintDescription: >-
+      Must be a valid Salesforce platform event endpoint URL.
+  SalesforcePlatformEventEndpointRateLimit:
+    Type: Number
+    Description: >-
+      Rate limit for the Salesforce platform event endpoint to avoid exceeding API limits and 
+      initiating throttling of requests. The default soft limit is 25 for production organizations and
+      sandboxes, and five for Developer Edition and trial
+      organizations. For details, refer to:
+      'https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm'.
+    MinValue: 1
+    Default: 25
+  MaximumRetryAttempts:
+    Type: Number
+    Description: >-
+      Maximum number of retry attempts to make before the request fails.
+      Retry attempts continue until either the maximum number of attempts is
+      made or the duration of the MaximumEventAgeInSeconds parameter is met.
+    MinValue: 0
+    MaxValue: 185
+    Default: 4
+  MaximumEventAgeInSeconds:
+    Type: Number
+    Description: >-
+      Maximum amount of time, in seconds, to continue to make retry
+      attempts.
+    MinValue: 60 # 1 minute
+    MaxValue: 86400 # 1 day
+    Default: 400 # 6.7 minutes
+  DlqName:
+    Type: String
+    Description: >-
+      Name of the Amazon SQS dead-letter queue for temporarily storing events
+      that failed to deliver.
+    MinLength: 1
+    MaxLength: 80
+    AllowedPattern: ^[a-zA-Z0-9-_]+$
+    ConstraintDescription: >-
+      Can include only alphanumeric characters, hyphens, or underscores.
+    Default: SalesforceDLQ
+  DlqCmkAlias:
+    Type: String
+    Description: >-
+      Alias of a symmetric AWS KMS customer-managed key (CMK) to use for
+      server-side encryption of any Amazon Chime messages stored in the
+      Amazon SQS dead-letter queue. The default is to use the AWS-managed CMK
+      for Amazon SQS (SSE-SQS). Alternatively, enter the alias of your custom
+      CMK.
+    MinLength: 7
+    MaxLength: 262
+    AllowedPattern: ^alias/[a-zA-Z0-9/_-]+$
+    ConstraintDescription: >-
+      The CMK alias must start with 'alias/'. It can contain only alphanumeric
+      characters, forward slashes (/), underscores (_), and dashes (-).
+    Default: alias/aws/sqs
+  DlqKmsDataKeyReusePeriod:
+    Type: Number
+    Description: >-
+      Length of time in seconds that Amazon SQS can reuse a data key
+      to encrypt or decrypt messages before calling AWS KMS again. Note: A
+      shorter time period provides better security, but results in more calls
+      to AWS KMS, which might incur charges after exceeding the free tier.
+    MinValue: 60 # 1 minute
+    MaxValue: 86400 # 1 day
+    Default: 300 # 5 minutes
+  DlqMessageRetentionPeriod:
+    Type: Number
+    Description: >-
+      Number of seconds that messages are retained in the dead-letter
+      queue. The default is 4 days.
+    MinValue: 60 # 1 minute
+    MaxValue: 1209600 # 14 days
+    Default: 345600 # 4 days
+  DlqAlarmEmail:
+    Type: String
+    Description: Email address to notify of operational issues.
+    MinLength: 1
+  DlqQueueDepthAlarmPeriod:
+    Type: Number
+    Description: >-
+      Period, in seconds, over which the statistic is applied. Valid values
+      are 10, 30, 60, and any multiple of 60.
+    MinValue: 10
+    Default: 300 # 5 minutes
+  DlqQueueDepthAlarmEvaluationPeriods:
+    Type: Number
+    Description: >-
+      Number of periods over which the number of messages in the dead-letter
+      queue is compared to the specified threshold.
+    MinValue: 1
+    Default: 1
+  DlqQueueDepthAlarmThreshold:
+    Type: Number
+    Description: >-
+      Threshold number of messages in the dead-letter queue to trigger an
+      alarm. If set to 0, the Amazon CloudWatch alarm and Amazon SNS topic are not deployed, disabling dead-letter queue monitoring and email
+      alerts.
+    MinValue: 0
+    Default: 10
+  IamUserName:
+    Type: String
+    Description: >-
+      User name to create in AWS IAM user account and used as the Salesforce Named Credential service account.
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: ^[\w+=,.@-]+$
+    ConstraintDescription: >-
+      Use alphanumeric or any of the following symbols: _+=,.@-
+    Default: salesforce
+  IamGroupName:
+    Type: String
+    Description: >-
+      Name for the AWS IAM group that grants the AWS IAM user account the
+      necessary permissions via the associated managed VirtualCallsUserPolicy
+      IAM policy.
+    MinLength: 1
+    MaxLength: 128
+    AllowedPattern: ^[\w+=,.@-]+$
+    ConstraintDescription: >-
+      Use alphanumeric or any of the following symbols: _+=,.@-
+    Default: salesforce
+  ControlRegion:
+    Type: String
+    Description: >-
+      Specifies the AWS Region through which API calls related to Video Calls are made.
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: ^[\w+=,.@-]+$
+    ConstraintDescription: >-
+      Use alphanumeric or any of the following symbols: _+=,.@-
+    Default: us-east-1
+  MessagingRegion:
+    Type: String
+    Description: >-
+      Specifies the AWS Region in which the waiting room and messaging channel data is processed and stored.
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: ^[\w+=,.@-]+$
+    ConstraintDescription: >-
+      Use alphanumeric or any of the following symbols: _+=,.@-
+    Default: us-east-1
+Conditions:
+  CreateAlarm: !Not [!Equals [!Ref DlqQueueDepthAlarmThreshold, 0]]
+Resources:
+  IamGroup:
+    Type: AWS::IAM::Group
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: >-
+              StartMeetingTranscription and StopMeetingTranscription require a
+              wildcard resource, and cfn-lint v0.64.1 incorrectly alerts on this.
+    Properties:
+      GroupName: !Ref IamGroupName
+      Path: /salesforce/
+      Policies:
+        - PolicyName: VirtualCallsUserPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AppInstanceActions
+                Effect: Allow
+                Action:
+                  - chime:DeleteAppInstance
+                  - chime:DescribeAppInstance
+                  - chime:GetAppInstanceRetentionSettings
+                  - chime:ListAppInstances
+                  - chime:PutAppInstanceRetentionSettings
+                  - chime:TagResource
+                  - chime:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*
+              - Sid: AppInstanceAdminActions
+                Effect: Allow
+                Action:
+                  - chime:CreateAppInstanceAdmin
+                  - chime:DeleteAppInstanceAdmin
+                  - chime:DescribeAppInstanceAdmin
+                  - chime:ListAppInstanceAdmins
+                Resource:
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/user/*
+              - Sid: AppInstanceUserActions
+                Effect: Allow
+                Action:
+                  - chime:Connect
+                  - chime:CreateChannel
+                  - chime:DeleteAppInstanceUser
+                  - chime:DescribeAppInstanceUser
+                  - chime:ListAppInstanceUsers
+                  - chime:ListAppInstanceUserEndpoints
+                  - chime:ListChannelMembershipsForAppInstanceUser
+                  - chime:ListChannels
+                  - chime:ListChannelsModeratedByAppInstanceUser
+                  - chime:UpdateAppInstanceUser
+                Resource:
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/channel/*
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/user/*
+              - Sid: ChannelUserActions
+                Effect: Allow
+                Action:
+                  - chime:CreateChannelMembership
+                  - chime:CreateChannelModerator
+                  - chime:DeleteChannel
+                  - chime:DeleteChannelMembership
+                  - chime:DescribeChannel
+                  - chime:DescribeChannelMembership
+                  - chime:GetChannelMessage
+                  - chime:ListChannelMemberships
+                  - chime:ListChannelMessages
+                  - chime:ListChannelModerators
+                  - chime:SendChannelMessage
+                Resource:
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/channel/*
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/user/*
+              - Sid: MeetingActions
+                Effect: Allow
+                Action:
+                  - chime:BatchCreateAttendee
+                  - chime:CreateAttendee
+                  - chime:DeleteAttendee
+                  - chime:DeleteMeeting
+                  - chime:GetAttendee
+                  - chime:GetMeeting
+                  - chime:ListAttendees
+                  - chime:ListAttendeeTags
+                  - chime:ListMeetingTags
+                  - chime:TagAttendee
+                  - chime:TagMeeting
+                  - chime:UntagAttendee
+                  - chime:UntagMeeting
+                Resource: !Sub arn:${AWS::Partition}:chime:${ControlRegion}:${AWS::AccountId}:meeting/*
+              - Sid: TagResourceActions
+                Effect: Allow
+                Action:
+                  - chime:ListTagsForResource
+                  - chime:TagResource
+                  - chime:UntagResource
+                Resource:
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/user/*
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/channel/*
+                  - !Sub arn:${AWS::Partition}:chime:${ControlRegion}:${AWS::AccountId}:meeting/*
+              - Sid: GlobalActions
+                Effect: Allow
+                Action:
+                  - chime:CreateAppInstance
+                  - chime:CreateAppInstanceUser
+                  - chime:CreateMeeting
+                  - chime:CreateMeetingWithAttendees
+                  - chime:GetMessagingSessionEndpoint
+                  - chime:GetRetentionSettings
+                  - chime:ListMeetings
+                  - chime:StartMeetingTranscription
+                  - chime:StopMeetingTranscription
+                Resource: '*'
+
+  IamUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Ref IamUserName
+      Path: /salesforce/
+      Groups:
+        - !Ref IamGroup
+  ChimeSDKMessagingRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource
+          ignore_reasons:
+            EIAMPolicyWildcardResource: >-
+              StartMeetingTranscription and StopMeetingTranscription require a
+              wildcard resource, and cfn-lint v0.64.1 incorrectly alerts on this.
+    Properties:
+      RoleName: VirtualCallsRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt IamUser.Arn
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: VirtualCallsRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: ChannelUserActions
+                Effect: Allow
+                Action:
+                  - chime:Connect
+                  - chime:GetChannelMessage
+                  - chime:SendChannelMessage
+                Resource:
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/channel/*
+                  - !Sub arn:${AWS::Partition}:chime:${MessagingRegion}:${AWS::AccountId}:app-instance/*/user/*
+  ChimeTranscriptionSlr:
+    Type: AWS::IAM::ServiceLinkedRole
+    Properties:
+      AWSServiceName: transcription.chime.amazonaws.com
+      Description: >-
+        Amazon Chime service-linked role with predefined permissions to allow
+        the service to call other AWS services on your behalf for performing
+        transcription.
+  SalesforceApiDestinationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: >-
+        Amazon EventBridge destination role for invoking the Salesforce service
+        provider event API endpoint.
+      Path: /salesforce/
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SalesforceApiDestinationPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - events:InvokeApiDestination
+                Resource: !GetAtt SalesforceApiDestination.Arn
+  SalesforceConnectionSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: OAuth connection credential secret.
+      SecretString: !Sub >-
+        {
+          "ClientID": "${SalesforceOAuthClientID}",
+          "ClientSecret": "${SalesforceOAuthClientSecret}",
+          "Username": "${SalesforceUsername}",
+          "Password": "${SalesforcePassword}"
+        }
+  SalesforceOAuthConnection:
+    Type: AWS::Events::Connection
+    Properties:
+      AuthorizationType: OAUTH_CLIENT_CREDENTIALS
+      AuthParameters:
+        OAuthParameters:
+          AuthorizationEndpoint: !Ref SalesforceAuthorizationEndpoint
+          ClientParameters:
+            ClientID: !Ref SalesforceOAuthClientID
+            ClientSecret: !Ref SalesforceOAuthClientSecret
+          HttpMethod: POST
+          OAuthHttpParameters:
+            BodyParameters:
+              - IsValueSecret: false
+                Key: grant_type
+                Value: password
+              - IsValueSecret: false
+                Key: username
+                Value: !Ref SalesforceUsername
+              - IsValueSecret: true
+                Key: password
+                Value: !Ref SalesforcePassword
+  SalesforceApiDestination:
+    Type: AWS::Events::ApiDestination
+    Properties:
+      ConnectionArn: !GetAtt SalesforceOAuthConnection.Arn
+      Description: >-
+        API destination to send events to Salesforce platform event endpoint.
+      HttpMethod: POST
+      InvocationEndpoint: !Ref SalesforcePlatformEventEndpoint
+      InvocationRateLimitPerSecond: !Ref SalesforcePlatformEventEndpointRateLimit
+  SalesforceEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Rule to use API destination with input transformer.
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.chime
+      RoleArn: !GetAtt SalesforceApiDestinationRole.Arn
+      Targets:
+        - Id: Salesforce-destination
+          Arn: !GetAtt SalesforceApiDestination.Arn
+          RetryPolicy:
+            MaximumRetryAttempts: !Ref MaximumRetryAttempts
+            MaximumEventAgeInSeconds: !Ref MaximumEventAgeInSeconds
+          DeadLetterConfig:
+            Arn: !GetAtt DeadLetterQueue.Arn
+          RoleArn: !GetAtt SalesforceApiDestinationRole.Arn
+          InputTransformer:
+            InputPathsMap:
+              source: $.source
+              account: $.account
+              id: $.id
+              region: $.region
+              detail-type: $.detail-type
+              time: $.time
+              eventType: $.detail.eventType
+              timestamp: $.detail.timestamp
+              meetingId: $.detail.meetingId
+              externalMeetingId: $.detail.externalMeetingId
+              attendeeId: $.detail.attendeeId
+              externalUserId: $.detail.externalUserId
+              mediaRegion: $.detail.mediaRegion
+              networkType: $.detail.networkType
+            InputTemplate: '{
+                "ServiceName": "<source>",
+                "Json": "{
+                  \"source\": \"<source>\",
+                  \"account\": \"<account>\",
+                  \"id\": \"<id>\",
+                  \"region\": \"<region>\",
+                  \"detail-type\": \"<detail-type>\",
+                  \"time\": \"<time>\",
+                  \"detail\": {
+                    \"eventType\": \"<eventType>\",
+                    \"timestamp\": \"<timestamp>\",
+                    \"meetingId\": \"<meetingId>\",
+                    \"externalMeetingId\": \"<externalMeetingId>\",
+                    \"attendeeId\": \"<attendeeId>\",
+                    \"externalUserId\": \"<externalUserId>\",
+                    \"mediaRegion\": \"<mediaRegion>\",
+                    \"networkType\": \"<networkType>\"
+                  }
+                }"
+              }'
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref DlqName
+      MessageRetentionPeriod: !Ref DlqMessageRetentionPeriod
+      KmsMasterKeyId: !Ref DlqCmkAlias
+      KmsDataKeyReusePeriodSeconds: !Ref DlqKmsDataKeyReusePeriod
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Condition: CreateAlarm
+    Properties:
+      DisplayName: !Sub ${DlqName}-topic
+      Subscription:
+        - Endpoint: !Ref DlqAlarmEmail
+          Protocol: email
+  QueueDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: CreateAlarm
+    Properties:
+      AlarmDescription: >-
+        Alarm if the Salesforce dead-letter queue depth exceeds the specified
+        number of messages.
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DeadLetterQueue.QueueName
+      Statistic: Sum
+      Period: !Ref DlqQueueDepthAlarmPeriod
+      EvaluationPeriods: !Ref DlqQueueDepthAlarmEvaluationPeriods
+      Threshold: !Ref DlqQueueDepthAlarmThreshold
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref AlarmTopic
+      TreatMissingData: ignore
+Outputs:
+  Postdeployment:
+    Description: See the deployment guide for postdeployment steps.
+    Value: https://aws-quickstart.github.io/quickstart-salesforce-industries-virtual-calls/#_postdeployment_steps

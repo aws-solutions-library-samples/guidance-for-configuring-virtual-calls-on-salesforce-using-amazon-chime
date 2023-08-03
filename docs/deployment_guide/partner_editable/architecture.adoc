@@ -6,23 +6,21 @@ AWS Cloud.
 // Replace this example diagram with your own. Follow our wiki guidelines: https://w.amazon.com/bin/view/AWS_Quick_Starts/Process_for_PSAs/#HPrepareyourarchitecturediagram. Upload your source PowerPoint file to the GitHub {deployment name}/docs/images/ directory in its repository.
 
 [#architecture1]
-.Partner Solution architecture for {partner-product-short-name} on AWS
-image::../docs/deployment_guide/images/architecture_diagram.png[Architecture]
+.Architecture for {partner-product-short-name} on AWS
+image::../docs/deployment_guide/images/architecture-diagram-salesforce-industries-virtual-calls.png[Architecture]
 
 As shown in <<architecture1>>, this Partner Solution sets up the following:
 
-* A highly available architecture that spans two Availability Zones.*
-* A virtual private cloud (VPC) configured with public and private subnets, according to AWS
-best practices, to provide you with your own virtual network on AWS.*
-* In the public subnets:
-** Managed network address translation (NAT) gateways to allow outbound
-internet access for resources in the private subnets.*
-** A Linux bastion host in an Auto Scaling group to allow inbound Secure
-Shell (SSH) access to Amazon Elastic Compute Cloud (Amazon EC2) instances in public and private subnets.*
-* In the private subnets:
-** <item>.
-** <item>.
-// Add bullet points for any additional components that are included in the deployment. Ensure that the additional components are shown in the architecture diagram. End each bullet with a period.
-* <describe any additional components>.
+* Amazon Chime SDK control plane for receiving requests from Salesforce Industry Cloud when consumers request appointments through their industry cloud provider application.
+* A default event bus for receiving event notifications from the control plane and delivering them to Amazon EventBridge.
+* An EventBridge rule that filters aws.chime events and a predefined https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-transform-target-input.html[input transformer rule^] that modifies the event and creates a https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm[{partner-company-short-name} platform event^].
+* During an active session via a {partner-company-short-name}-connected app, Amazon Chime SDK to communicate to the Amazon Chime media services endpoint to receive transcription requests.
 
-[.small]#* The template that deploys this Partner Solution into an existing VPC skips the components marked by asterisks and prompts you for your existing VPC configuration.#
+* Amazon Transcribe for receiving and processing transcription requests.
+* For event delivery failure handling:
+** An Amazon Simple Queue Service (Amazon SQS) queue that serves as a https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-rule-dlq.html[dead-letter queue^].
+** AWS Key Management Service (AWS KMS) to encrypt all messages stored in the Amazon SQS queue.
+** An Amazon CloudWatch alarm that monitors the Amazon SQS queue depth and alerts when the configured threshold is exceeded.
+** An Amazon Simple Notification Service (Amazon SNS) topic to send email notifications to interested parties when the CloudWatch alarm is triggered.
+
+* An AWS Secrets Manager secret for securely storing {partner-company-short-name} credentials and connection secrets.
