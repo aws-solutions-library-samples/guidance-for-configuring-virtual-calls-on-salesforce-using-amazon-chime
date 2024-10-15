@@ -1,5 +1,5 @@
 
-## Salesforce Industries Virtual Calls—Partner Solution
+## Salesforce Industries Virtual Calls - Solution Guidance
 
 ## Partner Solution Deployment Guide
 
