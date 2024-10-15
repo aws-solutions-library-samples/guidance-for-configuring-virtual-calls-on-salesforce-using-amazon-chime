@@ -113,3 +113,11 @@ For troubleshooting common Partner Solution issues, refer to the [AWS Partner So
 
 After you deploy a Partner Solution, confirm that your resources and services are updated and configured—including any required patches—to meet your security and other needs. For more information, refer to the Shared Responsibility Model.
 
+## Cleanup
+
+To remove the Partner Solution, you can delete the entire CloudFormation stack.
+
+1. In the AWS Management Console, choose **Services > CloudFormation**.
+2. Choose the existing Virtual Care stack.
+3. Choose **Delete** to remove. 
+
