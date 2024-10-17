@@ -109,6 +109,19 @@ The access key ID and secret access key is used to configure a Salesforce Named 
 
 For troubleshooting common Partner Solution issues, refer to the [AWS Partner Solution General Information Guide](https://fwd.aws/rA69w?) and [Troubleshooting CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html).
 
+## Costs
+
+You will pay for the AWS services used while running this guidance. The Amazon Chime SDK and the Amazon Transcribe service offers pay-for-use pricing with no upfront fees.
+
+As of September 2024, the cost for running this Guidance with the default settings in the US East (N. Virginia) is approximately $5.18 per month, for 1000 virtual call minutes-per-attendee and 100 total session-minutes. 
+
+| Region                | Description                        | Service            | Monthly | Assumptions                                                                                                                                                                                                                                                                                                                                                                      |
+|-----------------------|------------------------------------|--------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| US East (N. Virginia) | Connect to a standard WebRTC session                | Amazon ChimeSDK    | $1.70  | Standard definition session at 1,000 minutes-per-attendee |
+| US East (N. Virginia) | Capture of 720p composited WebRTC media             | Amazon ChimeSDK    | $1.00  | 100 session-minutes |
+| US East (N. Virginia) | Messaging - Message Send+Control+System Message     | Amazon ChimeSDK    | $0.08  | 100 messages (Virtual Care waiting room) |
+| US East (N. Virginia) | Standard Live Transcription                         | Amazon Transcribe  | $2.40  | 100 session-minutes standard live transcriptions|
+
 ## Customer responsibility
 
 After you deploy a Partner Solution, confirm that your resources and services are updated and configured—including any required patches—to meet your security and other needs. For more information, refer to the Shared Responsibility Model.
