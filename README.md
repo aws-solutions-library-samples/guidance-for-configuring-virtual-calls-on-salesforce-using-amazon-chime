@@ -1,5 +1,5 @@
 
-## Salesforce Industries Virtual Calls - Solution Guidance
+## Guidance for Configuring Virtual Calls on Salesforce Using Amazon Chime
 
 ## Guidance Deployment Guide
 
