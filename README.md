@@ -45,11 +45,7 @@ This Guidance provides the following deployment option for provisioning Virtual 
 
 If you’ve already deployed Virtual Calls and just need to upgrade your existing deployment, perform the following steps:
 
-1. Do the following steps to download the latest template file from GitHub:
-    1. Navigate to the [Partner Solution landing page](https://fwd.aws/VVvWr?).
-    2. Choose **View the source code for this Partner Solution** to open the GitHub repository.
-    3. Open the **template** folder to access the latest CloudFormation template.
-    4. Download the template.
+1. Download the Cloudformation template from the templates directory.
 2. In the AWS Management Console, choose **Services > CloudFormation**.
 3. Choose the existing Virtual Care stack.
 4. Choose **Update** to open the **Update stack** page.
