@@ -45,7 +45,7 @@ This Guidance provides the following deployment option for provisioning Virtual 
 
 If you’ve already deployed Virtual Calls and just need to upgrade your existing deployment, perform the following steps:
 
-1. Download the Cloudformation template from the templates directory.
+1. Download the CloudFormation template from the templates directory.
 2. In the AWS Management Console, choose **Services > CloudFormation**.
 3. Choose the existing Virtual Care stack.
 4. Choose **Update** to open the **Update stack** page.
