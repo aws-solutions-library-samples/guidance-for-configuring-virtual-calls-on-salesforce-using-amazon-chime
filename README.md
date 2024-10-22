@@ -1,33 +1,27 @@
 
 ## Salesforce Industries Virtual Calls - Solution Guidance
 
-## Partner Solution Deployment Guide
+## Guidance Deployment Guide
 
-This Partner Solution was created by Salesforce, Inc. in collaboration with Amazon Web Services (AWS). Partner Solutions are automated reference deployments that help people deploy popular technologies on AWS according to AWS best practices. If you’re unfamiliar with AWS Partner Solutions, refer to the AWS Partner Solution General Information Guide.
+This Guidance was created by Salesforce, Inc. in collaboration with Amazon Web Services (AWS). A guidance is an automated reference deployment that help people deploy popular technologies on AWS according to AWS best practices. 
 
 ## Overview
 
-This Partner Solution deploys Salesforce Industries: Virtual Calls on the AWS Cloud. If you are unfamiliar with AWS Partner Solutions, refer to the [AWS Partner Solutions General Information Guide](https://fwd.aws/rA69w?).
+This Guidance deploys Salesforce Industries: Virtual Calls on the AWS Cloud. This deployment integrates Virtual Calls with Amazon Chime to offer video conferencing for consumers using an industry cloud platform connected to Salesforce, Inc. Industry Cloud. Virtual Calls sessions provide both video and audio support for business-to-consumer (B2C) interactions. Video calls can use Amazon Transcribe to generate real-time audio transcriptions, which are then used to display text captions directly on the interface for accessibility.
 
-This deployment integrates Virtual Calls with Amazon Chime to offer video conferencing for consumers using an industry cloud platform connected to Salesforce, Inc. Industry Cloud. Virtual Calls sessions provide both video and audio support for business-to-consumer (B2C) interactions. Video calls can use Amazon Transcribe to generate real-time audio transcriptions, which are then used to display text captions directly on the interface for accessibility.
+## Support
 
-## Costs and licenses
-
-This Partner Solution integrates various AWS services with Industry Cloud(s). To receive support from AWS, you must enroll in either AWS Business Support or a higher support plan. For details and costs, refer to [Compare AWS Support Plans](https://aws.amazon.com/premiumsupport/plans/).
-
-There is no cost to use this Partner Solution, but you will be billed for any AWS services or resources that this solution deploys. For more information, refer to the [AWS Partner Solutions General Information Guide](https://fwd.aws/rA69w?).
+This Guidance integrates various AWS services with Industry Cloud(s). To receive support from AWS, you must enroll in either AWS Business Support or a higher support plan. For details and costs, refer to [Compare AWS Support Plans](https://aws.amazon.com/premiumsupport/plans/).
 
 ## Architecture
 
-
-Deploying this Partner Solution with default parameters builds the following Virtual Calls environment in the
-AWS Cloud.
+Deploying this Guidance with default parameters builds the following Virtual Calls environment in the AWS Cloud.
 
 <a name="architecture1"></a>**Architecture for Virtual Calls on AWS**
 
 ![Architecture](./docs/deployment_guide/images/architecture-diagram-salesforce-industries-virtual-calls.png)
 
-As shown in [Architecture for Virtual Calls on AWS](#architecture1), this Partner Solution sets up the following:
+As shown in [Architecture for Virtual Calls on AWS](#architecture1), this Guidance sets up the following:
 
 * Amazon Chime SDK control plane for receiving requests from Salesforce Industry Cloud when consumers request appointments through their industry cloud provider application.
 * A default event bus for receiving event notifications from the control plane and delivering them to Amazon EventBridge.
@@ -43,7 +37,7 @@ As shown in [Architecture for Virtual Calls on AWS](#architecture1), this Partne
 
 ## Deployment options
 
-This Partner Solution provides the following deployment option for provisioning Virtual Calls resources into your new AWS account. Configure Virtual Calls settings as needed.
+This Guidance provides the following deployment option for provisioning Virtual Calls resources into your new AWS account. Configure Virtual Calls settings as needed.
 
 [Deploy Virtual Calls into a new AWS account](https://fwd.aws/P7jzX?)
 
@@ -51,11 +45,7 @@ This Partner Solution provides the following deployment option for provisioning 
 
 If you’ve already deployed Virtual Calls and just need to upgrade your existing deployment, perform the following steps:
 
-1. Do the following steps to download the latest template file from GitHub:
-    1. Navigate to the [Partner Solution landing page](https://fwd.aws/VVvWr?).
-    2. Choose **View the source code for this Partner Solution** to open the GitHub repository.
-    3. Open the **template** folder to access the latest CloudFormation template.
-    4. Download the template.
+1. Download the CloudFormation template from the templates directory.
 2. In the AWS Management Console, choose **Services > CloudFormation**.
 3. Choose the existing Virtual Care stack.
 4. Choose **Update** to open the **Update stack** page.
@@ -76,7 +66,7 @@ If you’ve already deployed Virtual Calls and just need to upgrade your existin
 
 ## Deployment steps
 
-1. Sign in to your AWS account, and launch this Partner Solution, as described under Deployment options. The AWS CloudFormation console opens with a prepopulated template.
+1. Sign in to your AWS account, and launch this Guidance, as described under Deployment options. The AWS CloudFormation console opens with a prepopulated template.
 
 2. Choose the correct AWS Region, and then choose Next.
 
@@ -94,7 +84,7 @@ If you’ve already deployed Virtual Calls and just need to upgrade your existin
 
 Configure a [Salesforce Named Credential](https://help.salesforce.com/s/articleView?id=sf.video_call_create_a_named_credential.htm&type=5) so that Virtual Calls can invoke AWS services.
 
-To use AWS Identity and Access Management (IAM) to retrieve the user’s access key and secret that’s generated by this Partner Solution, do the following steps:
+To use AWS Identity and Access Management (IAM) to retrieve the user’s access key and secret that’s generated by this Guidance, do the following steps:
 
 1. Log in to your AWS account. This account must have sufficient privileges to create an access key for the service account. For more information, refer to [CreateAccessKey](https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateAccessKey.html).
 2. In the AWS Management Console, choose **Services > Identity Access Management (IAM)**.
@@ -107,9 +97,9 @@ The access key ID and secret access key is used to configure a Salesforce Named 
 
 ## Troubleshooting
 
-For troubleshooting common Partner Solution issues, refer to the [AWS Partner Solution General Information Guide](https://fwd.aws/rA69w?) and [Troubleshooting CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html).
+For troubleshooting common install issues, refer to this guide [Troubleshooting CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html).
 
-## Costs
+## Costs and licenses
 
 You will pay for the AWS services used while running this guidance. The Amazon Chime SDK and the Amazon Transcribe service offers pay-for-use pricing with no upfront fees.
 
@@ -124,11 +114,11 @@ As of September 2024, the cost for running this Guidance with the default settin
 
 ## Customer responsibility
 
-After you deploy a Partner Solution, confirm that your resources and services are updated and configured—including any required patches—to meet your security and other needs. For more information, refer to the Shared Responsibility Model.
+After you deploy this Guidance, confirm that your resources and services are updated and configured—including any required patches—to meet your security and other needs. For more information, refer to the Shared Responsibility Model.
 
 ## Cleanup
 
-To remove the Partner Solution, you can delete the entire CloudFormation stack.
+To remove the Guidance, you can delete the entire CloudFormation stack.
 
 1. In the AWS Management Console, choose **Services > CloudFormation**.
 2. Choose the existing Virtual Care stack.
